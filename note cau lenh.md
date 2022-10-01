@@ -1,5 +1,5 @@
 # 1. k8s
-k8s mong đượch hỗ trợ cài vì có nhiều câu lệnh root nó cần có các câu lệnh khác chạy trước.
+k8s xin hỗ trợ cài đặt vì có nhiều câu lệnh root nó cần có các câu lệnh khác chạy trước đó.
 ## 1.1 thông tin server:
 ```
 os_vda@10.205.58.1
