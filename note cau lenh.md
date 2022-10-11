@@ -1,5 +1,5 @@
 # 1. k8s
-k8s xin hỗ trợ cài đặt vì có nhiều câu lệnh root nó cần có các câu lệnh khác chạy trước đó.
+k8s mong đượch hỗ trợ cài vì có nhiều câu lệnh root nó cần có các câu lệnh khác chạy trước.
 ## 1.1 thông tin server:
 ```
 os_vda@10.205.58.1
@@ -48,7 +48,7 @@ yum install docker-ce-19.03.15-3.el7.x86_64.rpm
 ```
 ### 1.2.2 Setup daemon
 ```sh
-cat > /etc/docker/daemon.json <<EOF
+sudo cat > /etc/docker/daemon.json <<EOF
 {
   "insecure-registries": ["10.207.58.2:5000"],
   "exec-opts": ["native.cgroupdriver=systemd"],
@@ -73,7 +73,47 @@ sudo systemctl start docker
 sudo groupadd docker
 sudo usermod -aG docker ${USER}
 ```
-1.2.5 ...
+### 1.2.5 
+```sh
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf  
+br_netfilter  
+EOF  
+  
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf  
+net.bridge.bridge-nf-call-ip6tables = 1  
+net.bridge.bridge-nf-call-iptables = 1  
+EOF
+```
+
+```sh
+sudo sysctl --system
+```
+```sh
+sudo setenforce 0  
+sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+```
+```
+sudo swapoff -a  
+sudo sed -e '/swap/s/^/#/g' -i /etc/fstab
+```
+```sh
+sudo cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf  
+[Service]  
+ExecStart=  
+#  Replace "systemd" with the cgroup driver of your container runtime. The default value in the kubelet is "cgroupfs".  
+ExecStart=/usr/bin/kubelet --address=127.0.0.1 --pod-manifest-path=/etc/kubernetes/manifests --cgroup-driver=systemd  
+Restart=always  
+EOF
+```
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+```
+```
+sudo systemctl restart docker
+```
+
 # 2. mysql
 ## 2.1 thông tin server:
 ```
@@ -84,7 +124,7 @@ os_vda@10.205.58.18
 ## 2.2 câu lệnh cần chạy:
 ### 2.2.1 Disable selinux
 ```sh
-vi /etc/selinux/config
+sudo vi /etc/selinux/config
 ```
 SELINUX=disabled
 ### 2.2.2 thêm hosts:
